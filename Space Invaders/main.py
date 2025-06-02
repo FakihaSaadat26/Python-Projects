@@ -18,6 +18,7 @@ import pygame
 import random
 import math
 import sys
+import os
 
 # Initialize Pygame
 pygame.init()
@@ -132,7 +133,18 @@ class SpaceInvadersGame:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("Space Invaders - Python Graphics Project")
         self.clock = pygame.time.Clock()
-        
+        import os
+
+        # Load sounds (relative to this file)
+        self.laser_sound = pygame.mixer.Sound(os.path.join("sounds", "laser.wav"))
+        self.explosion_sound = pygame.mixer.Sound(os.path.join("sounds", "explosion.aiff"))
+        self.game_over_sound = pygame.mixer.Sound(os.path.join("sounds", "gameover.wav"))
+
+        # Background music
+        pygame.mixer.music.load(os.path.join("sounds", "bg.wav"))
+        pygame.mixer.music.play(-1)  # Loop forever
+
+    
         # Sprite groups
         self.all_sprites = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
@@ -171,6 +183,7 @@ class SpaceInvadersGame:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and not self.game_over:
                     bullet = self.player.shoot()
+                    self.laser_sound.play()
                     self.bullets.add(bullet)
                     self.all_sprites.add(bullet)
                 elif event.key == pygame.K_r and self.game_over:
@@ -203,6 +216,7 @@ class SpaceInvadersGame:
         # Player bullets hit enemies
         hits = pygame.sprite.groupcollide(self.bullets, self.enemies, True, True)
         for hit in hits:
+            self.explosion_sound.play()
             self.score += 10
             # Create explosion particles
             for _ in range(10):
@@ -255,6 +269,10 @@ class SpaceInvadersGame:
             pygame.draw.rect(self.screen, GREEN, (200 + i * 25, 95, 20, 20))
         
         if self.game_over:
+            if self.player.health <= 0:
+                self.game_over = True
+                self.game_over_sound.play()
+
             game_over_text = self.font.render("GAME OVER - Press R to Restart", True, RED)
             text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2))
             self.screen.blit(game_over_text, text_rect)
@@ -324,6 +342,8 @@ def main():
     else:
         game = SpaceInvadersGame()
         game.run()
+    
+    
 
 if __name__ == "__main__":
     main()
